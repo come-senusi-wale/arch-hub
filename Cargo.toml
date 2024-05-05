@@ -1,0 +1,42 @@
+[package]
+name = "arch-hub"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[features]
+backtraces = ["cosmwasm-std/backtraces"]
+# use library feature to disable all instantiate/execute/query exports
+library = []
+
+[dependencies]
+
+cosmwasm-std = "~1.0.0-beta"
+cosmwasm-storage = "~1.0.0-beta"
+cw-storage-plus = "0.13.4"
+cw-utils = "0.14.0"
+cosmwasm-schema = "1.1.0"
+thiserror = "1.0.31"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+schemars = "0.8.12"
+cw721-updatable = { git = "https://github.com/archid-protocol/cw721-updatable.git", version = "1.0.0" }
+archid-token = { git = "https://github.com/archid-protocol/archid-token.git", version = "1.0.0", features = ["library"] }
+
+
+[dev-dependencies]
+
