@@ -19,8 +19,14 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("excessive withdrawal amount (max_amount {max_amount})")]
-    ExcessiveWithdraw { max_amount: Uint128 },
+    #[error("invalid contractor account ID")]
+    InvalidContractorId {  },
+
+    #[error("invalid contractor domain name")]
+    InvalidContractorDomainName {  },
+
+    #[error("contractor not available")]
+    ContratorUnAvailable {  },
 
     #[error("description too short (minimum description length {min_desc_length})")]
     DescriptionTooShort { min_desc_length: u64 },

@@ -145,7 +145,7 @@ async function main() {
 
 // main()
 
-const contractAddress = 'archway1yd3xfkyktp7sty3806cdugnfpyykfj7mkly3wt7ux7m6x7v7r6fsrr4lwr'
+const contractAddress = 'archway1q8dejsph4yupcx3vd6gnfgr2zh35uj5ceqcdufnwcfp4nyk8f2yqayxrax'
 const client = await ArchwayClient.connect('https://rpc.constantine.archway.io');
 
 //query 
@@ -154,7 +154,7 @@ async function queryContract() {
     try {
     const msg = {
         profile: {
-            id:  "waledayofiv.arch"
+            id:  accounts[0].address
         },
     };
 
@@ -177,7 +177,7 @@ async function signContract() {
     
     const msg = {
         create_profile: {
-            name: "waledayofiv",
+            name: "waledayosix",
             hour_rate: "100000",
             cost: cost
         }

@@ -13,9 +13,11 @@ use crate::{
         ExecuteMsg as ArchIdExecuteMsg, MetaDataUpdateMsg
     }, 
     constant::{ARCH_REGISTRY_ADDRESS, CW721_ADDRESS, DENOM}, error::ContractError, 
-    read_util::{query_current_metadata, query_name_owner}, state::{
-        Profile, PROFILE, 
-    }, write_utils::send_data_update
+    read_util::{query_current_metadata, query_name_owner}, 
+    state::{
+        Job, Profile, Status, JOB, PROFILE
+    }, 
+    write_utils::send_data_update
 };
 
 pub fn create_profile(
@@ -26,7 +28,7 @@ pub fn create_profile(
     hour_rate: Option<Uint128>,
     cost: u128
 ) -> Result<Response, ContractError> {
-    // let key = info.sender.as_str().as_bytes();
+    let key = info.sender.as_str().as_bytes();
 
     let fund = may_pay(&info, &String::from(DENOM))?;
 
@@ -41,7 +43,7 @@ pub fn create_profile(
 
     let arch_id = name.clone() + &String::from(".arch");
 
-    let key = arch_id.as_str().as_bytes();
+    // let key = arch_id.as_str().as_bytes();
 
     let profile = Profile {
         arch_id: arch_id.clone(),
@@ -90,7 +92,8 @@ pub fn update_hour_rate(
     id: String,
     hour_rate: Uint128,
 ) -> Result<Response, ContractError> {
-    let key = id.as_str().as_bytes();
+    // let key = id.as_str().as_bytes();
+    let key = info.sender.as_str().as_bytes();
 
     let mut Profile = PROFILE.load(deps.storage, key)?;
 
@@ -98,6 +101,10 @@ pub fn update_hour_rate(
 
     //check that the address is owner of id
     if profile_address != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if id != Profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
@@ -116,7 +123,8 @@ pub fn set_availability(
     id: String,
     available: bool,
 ) -> Result<Response, ContractError> {
-    let key = id.as_str().as_bytes();
+    // let key = id.as_str().as_bytes();
+    let key = info.sender.as_str().as_bytes();
 
     let mut Profile = PROFILE.load(deps.storage, key)?;
 
@@ -127,60 +135,16 @@ pub fn set_availability(
         return Err(ContractError::Unauthorized{});
     }
 
+    if id != Profile.arch_id {
+        return Err(ContractError::Unauthorized{});
+    }
+
     Profile.available = available;
 
     PROFILE.save(deps.storage, key, &Profile)?;
     Ok(Response::new()
         .add_attribute("method", "set_availability")
         .add_attribute("arch_id", id.to_string()))
-}
-
-pub fn update_metadata(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    id: String,
-    update: MetaDataUpdateMsg,
-) -> Result<Response, ContractError> {
-    let key = id.as_str().as_bytes();
-
-    let Profile = PROFILE.load(deps.storage, key)?;
-
-    let profile_address = deps.api.addr_validate(Profile.account_id.as_str())?;
-
-    //check that the address is owner of id
-    if profile_address != info.sender {
-        return Err(ContractError::Unauthorized{});
-    }
-
-    let cw721 = deps.api.addr_validate(CW721_ADDRESS)?;
-
-    let owner_response = query_name_owner(&id, &cw721, &deps).unwrap();
-
-    if owner_response.owner != info.sender {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    let current_metadata: Metadata = query_current_metadata(&id, &cw721, &deps).unwrap();
-
-    let new_metadata = Metadata {
-        description: update.clone().description,
-        name: Some(id.clone()),
-        image: update.clone().image,
-        created: current_metadata.created,
-        expiry: current_metadata.expiry,
-        domain: current_metadata.domain,
-        subdomains: current_metadata.subdomains,
-        accounts: update.accounts,
-        websites: update.websites,
-    };
-
-    let resp = send_data_update(&id, &cw721, new_metadata);
-
-    Ok(Response::new()
-        .add_messages(resp)
-        .add_attribute("action", "metadata_update")
-        .add_attribute("domain", id))
 }
 
 
@@ -193,7 +157,8 @@ pub fn update_metadata_two(
 ) -> Result<Response, ContractError> {
     let arch_id = id.clone() + &String::from(".arch");
 
-    let key = arch_id.as_str().as_bytes();
+    // let key = arch_id.as_str().as_bytes();
+    let key = info.sender.as_str().as_bytes();
 
     let Profile = PROFILE.load(deps.storage, key)?;
 
@@ -201,6 +166,10 @@ pub fn update_metadata_two(
 
     //check that the address is owner of id
     if profile_address != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if id != Profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
@@ -247,6 +216,62 @@ pub fn update_metadata_two(
         .add_messages(messages)
         .add_attribute("action", "metadata_update")
         .add_attribute("domain", arch_id.clone()))
+}
+
+
+pub fn book_contractor(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    contractor_domain: String,
+    contractor_account_id: String,
+    length: u32
+) -> Result<Response, ContractError> {
+    // let contractor_arch_id = contractor_domain.clone() + &String::from(".arch");
+
+    // let key = arch_id.as_str().as_bytes();
+    let key = contractor_account_id.as_str().as_bytes();
+    let contrator_profile = PROFILE.load(deps.storage, key)?;
+    let contrator_profile_address = deps.api.addr_validate(contrator_profile.account_id.as_str())?;
+
+    let customer_key = info.sender.as_str().as_bytes();
+    let customer_profile = PROFILE.load(deps.storage, customer_key)?;
+    let customer_profile_address = deps.api.addr_validate(customer_profile.account_id.as_str())?;
+
+    //check that the address is owner of id
+    if customer_profile_address != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    //check that the address is owner of id
+    if contrator_profile_address != deps.api.addr_validate(contractor_account_id.as_str())? {
+        return Err(ContractError::InvalidContractorId {});
+    }
+
+    if contractor_domain != contrator_profile.arch_id {
+        return Err(ContractError::InvalidContractorDomainName {});
+    }
+
+    if !contrator_profile.available {
+        return Err(ContractError::ContratorUnAvailable{});
+    }
+
+    let job = Job {
+        contrator_domain: contrator_profile.arch_id.clone(),
+        customer_domain: customer_profile.arch_id,
+        contrator_id: contrator_profile.account_id,
+        customer_id: customer_profile.account_id,
+        rate: contrator_profile.hour_rate.expect("rate"),
+        lenth: length,
+        status: Status::Request,
+        start_time: 0
+    };
+
+    JOB.save(deps.storage, customer_key, &job)?;
+
+    Ok(Response::new()
+    .add_attribute("method", "book contractor")
+    .add_attribute("arch_id", contrator_profile.arch_id.to_string()))
 }
 
 
