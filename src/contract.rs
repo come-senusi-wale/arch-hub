@@ -6,7 +6,7 @@ use crate::{
     error::ContractError, execute::{self, update_hour_rate}, msg::{
         ExecuteMsg, InstantiateMsg, ProfileResponse, QueryMsg
     }, query, state::{
-        Profile, PROFILE, 
+        CustomerJob, Profile, ENTRY_SEQ, PROFILE 
     }
 };
 
@@ -17,6 +17,7 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
+    ENTRY_SEQ.save(deps.storage, &0u64)?;
 
     Ok(Response::default())
 }
@@ -32,7 +33,12 @@ pub fn execute(
         ExecuteMsg::CreateProfile {name, hour_rate, cost} => execute::create_profile(deps, env, info, name, hour_rate, cost), 
         ExecuteMsg::UpdateHourlyRate { name, hour_rate } => execute::update_hour_rate(deps, env, info, name, hour_rate),
         ExecuteMsg::SetAvailability { name, available } => execute::set_availability(deps, env, info, name, available),
-        ExecuteMsg::UpdateMetadata { name, update } => execute::update_metadata_two(deps, env, info, name, update)
+        ExecuteMsg::UpdateMetadata { name, update } => execute::update_metadata(deps, env, info, name, update),
+        ExecuteMsg::JobRequest { contractor_domain, contractor_account_id, length } => execute::job_request(deps, env, info, contractor_domain, contractor_account_id, length),
+        ExecuteMsg::AcceptRequest { job_id } => execute::accept_request(deps, env, info, job_id),
+        ExecuteMsg::WithdrawalRequest { job_id } => execute::withdraw_request(deps, env, info, job_id),
+        ExecuteMsg::ApproveWithdrawal { job_id } => execute::approve_withdrawal(deps, env, info, job_id)
+       
     }   
 }
 
@@ -41,18 +47,11 @@ pub fn execute(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Profile { id } => to_binary(&query::profile(deps, id)?),
+        QueryMsg::SingleJob { job_id } => to_binary(&query::single_job(deps, job_id)?),
+        QueryMsg::ManyJob { job_id, start_after, limit } => to_binary(&query::many_job(deps, job_id, start_after, limit)?),
+        QueryMsg::CustomerJob { account_id } => to_binary(&query::customer_job(deps, account_id)?),
+        QueryMsg::ContractorJob { account_id } => to_binary(&query::contractor_job(deps, account_id)?)
         
     }
 }
 
-// fn query_entry(deps: Deps, id: String) -> StdResult<ProfileResponse> {
-//     let key = id.as_str().as_bytes();
-
-//     let entry = PROFILE.load(deps.storage, key)?;
-//     Ok(ProfileResponse {
-//         arch_id: entry.arch_id,
-//         available: entry.available ,
-//         hour_rate: entry.hour_rate,
-//         account_id: entry.account_id,
-//     })
-// }

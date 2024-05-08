@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use archid_token::Metadata;
 use cosmwasm_std::{
      to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg
@@ -15,7 +17,7 @@ use crate::{
     constant::{ARCH_REGISTRY_ADDRESS, CW721_ADDRESS, DENOM}, error::ContractError, 
     read_util::{query_current_metadata, query_name_owner}, 
     state::{
-        Job, Profile, Status, JOB, PROFILE
+        ContractorJob, CustomerJob, Job, Profile, Status, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE
     }, 
     write_utils::send_data_update
 };
@@ -29,6 +31,12 @@ pub fn create_profile(
     cost: u128
 ) -> Result<Response, ContractError> {
     let key = info.sender.as_str().as_bytes();
+
+    let check_profile_exist = PROFILE.has(deps.storage, key,);
+
+    if check_profile_exist {
+        return Err(ContractError::ProfileCreated{});
+    }
 
     let fund = may_pay(&info, &String::from(DENOM))?;
 
@@ -148,7 +156,7 @@ pub fn set_availability(
 }
 
 
-pub fn update_metadata_two(
+pub fn update_metadata(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
@@ -173,30 +181,6 @@ pub fn update_metadata_two(
         return Err(ContractError::Unauthorized{});
     }
 
-    // let cw721 = deps.api.addr_validate(CW721_ADDRESS)?;
-
-    // let owner_response = query_name_owner(&id, &cw721, &deps).unwrap();
-
-    // if owner_response.owner != info.sender {
-    //     return Err(ContractError::Unauthorized {});
-    // }
-
-    // let current_metadata: Metadata = query_current_metadata(&id, &cw721, &deps).unwrap();
-
-    // let new_metadata = Metadata {
-    //     description: update.clone().description,
-    //     name: Some(id.clone()),
-    //     image: update.clone().image,
-    //     created: current_metadata.created,
-    //     expiry: current_metadata.expiry,
-    //     domain: current_metadata.domain,
-    //     subdomains: current_metadata.subdomains,
-    //     accounts: update.accounts,
-    //     websites: update.websites,
-    // };
-
-    // let resp = send_data_update(&id, &cw721, new_metadata);
-
     let registry_contract = ARCH_REGISTRY_ADDRESS;
 
     // Create registration msg
@@ -219,7 +203,7 @@ pub fn update_metadata_two(
 }
 
 
-pub fn book_contractor(
+pub fn job_request(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
@@ -237,6 +221,14 @@ pub fn book_contractor(
     let customer_key = info.sender.as_str().as_bytes();
     let customer_profile = PROFILE.load(deps.storage, customer_key)?;
     let customer_profile_address = deps.api.addr_validate(customer_profile.account_id.as_str())?;
+
+    let fund = may_pay(&info, &String::from(DENOM))?;
+
+    let total_cost = contrator_profile.hour_rate.expect("contractor hour rate") * Uint128::new(length as u128 );
+
+    if fund < Uint128::from(total_cost) {
+        return Err(ContractError::InsufficientFundsSent{});
+    }
 
     //check that the address is owner of id
     if customer_profile_address != info.sender {
@@ -256,7 +248,10 @@ pub fn book_contractor(
         return Err(ContractError::ContratorUnAvailable{});
     }
 
+    let job_id = ENTRY_SEQ.update::<_, cosmwasm_std::StdError>(deps.storage, |id| Ok(id.add(1)))?;
+
     let job = Job {
+        job_id,
         contrator_domain: contrator_profile.arch_id.clone(),
         customer_domain: customer_profile.arch_id,
         contrator_id: contrator_profile.account_id,
@@ -267,11 +262,146 @@ pub fn book_contractor(
         start_time: 0
     };
 
-    JOB.save(deps.storage, customer_key, &job)?;
+    JOB.save(deps.storage, job_id, &job)?;
+
+    // check for customer if he has job already
+    let check_customer_job = CUSTOMER_JOB.has(deps.storage, customer_key);
+
+    if check_customer_job {
+        let mut customer_job = CUSTOMER_JOB.load(deps.storage, customer_key)?;
+
+        customer_job.job_id.push(job_id);
+
+        CUSTOMER_JOB.save(deps.storage, customer_key, &customer_job);
+
+    }else {
+        let mut job_ids = Vec::new();
+
+        job_ids.push(job_id);
+
+        let customer_job = CustomerJob {
+            job_id: job_ids
+        };
+        CUSTOMER_JOB.save(deps.storage, customer_key, &customer_job);
+    }
+
+
+    // check for contractor if he has job already
+    let check_contractor_job = CONTRACTOR_JOB.has(deps.storage, key);
+
+    if check_contractor_job {
+        let mut contracor_job = CONTRACTOR_JOB.load(deps.storage, key)?;
+
+        contracor_job.job_id.push(job_id);
+
+        CONTRACTOR_JOB.save(deps.storage, key, &contracor_job);
+
+    }else {
+        let mut job_ids = Vec::new();
+
+        job_ids.push(job_id);
+
+        let contractor_job = ContractorJob {
+            job_id: job_ids
+        };
+        CONTRACTOR_JOB.save(deps.storage, key, &contractor_job);
+    }
 
     Ok(Response::new()
     .add_attribute("method", "book contractor")
     .add_attribute("arch_id", contrator_profile.arch_id.to_string()))
+}
+
+
+pub fn accept_request(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    job_id: u64
+) -> Result<Response, ContractError> {
+    let mut job = JOB.load(deps.storage, job_id)?;
+
+    //check that the signer is the contractor
+    if job.contrator_id != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if job.status != Status::Request {
+        return Err(ContractError::JobRequest{});
+    }
+
+    let start_time = env.block.time.seconds();
+
+    job.start_time = start_time;
+    job.status = Status::Start;
+    
+    JOB.save(deps.storage, job_id, &job);
+
+    Ok(Response::new()
+    .add_attribute("method", "accept request")
+    .add_attribute("job_id", job_id.to_string()))
+}
+
+
+pub fn withdraw_request(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    job_id: u64
+) -> Result<Response, ContractError> {
+    let mut job = JOB.load(deps.storage, job_id)?;
+
+    //check that the signer is the contractor
+    if job.contrator_id != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if job.status != Status::Start {
+        return Err(ContractError::JobStarted{});
+    }
+
+    let job_length_seconds = job.lenth.checked_mul(3600).unwrap() as u64; 
+
+    let time_diff = env.block.time.seconds().checked_sub(job.start_time).unwrap();
+
+    if time_diff <  job_length_seconds{
+        return Err(ContractError::WithrawalRequst{});
+    }
+
+    job.status = Status::Complete;
+    
+    JOB.save(deps.storage, job_id, &job);
+
+    Ok(Response::new()
+    .add_attribute("method", "withraw request")
+    .add_attribute("job_id", job_id.to_string()))
+}
+
+
+pub fn approve_withdrawal(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    job_id: u64
+) -> Result<Response, ContractError> {
+    let mut job = JOB.load(deps.storage, job_id)?;
+
+    //check that the signer is the customer
+    if job.customer_id != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if job.status != Status::Complete {
+        return Err(ContractError::JobCompleted{});
+    }
+
+    job.status = Status::Withdraw;
+    
+    JOB.save(deps.storage, job_id, &job);
+
+    Ok(Response::new()
+    .add_attribute("method", "approve withraw request")
+    .add_attribute("job_id", job_id.to_string()))
 }
 
 

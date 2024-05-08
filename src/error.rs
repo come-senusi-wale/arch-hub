@@ -19,14 +19,29 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("profile created already")]
+    ProfileCreated {},
+
     #[error("invalid contractor account ID")]
-    InvalidContractorId {  },
+    InvalidContractorId {},
 
     #[error("invalid contractor domain name")]
-    InvalidContractorDomainName {  },
+    InvalidContractorDomainName {},
 
     #[error("contractor not available")]
-    ContratorUnAvailable {  },
+    ContratorUnAvailable {},
+
+    #[error("Job request not sent")]
+    JobRequest {},
+
+    #[error("Job not started yet")]
+    JobStarted {},
+
+    #[error("Job time not yet finished")]
+    WithrawalRequst {},
+
+    #[error("Job not yet completed")]
+    JobCompleted {},
 
     #[error("description too short (minimum description length {min_desc_length})")]
     DescriptionTooShort { min_desc_length: u64 },
