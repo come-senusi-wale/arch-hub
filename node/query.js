@@ -137,9 +137,32 @@ async function contratorJob() {
 }
 
 
+//review
+async function review() {  
+    try {
+    const msg = {
+        review: {
+            job_id:  1,
+        },
+    };
+
+    const query = await client.queryContractSmart(
+        contractAddress,
+        msg
+    );
+
+    console.log("query: ", query);
+
+    } catch (error) {
+        console.log('error', error)
+    }
+}
+
+
 
 // profile()
-sigleJob()
+// sigleJob()
 // manyJob()
-// customerJob()
-// contratorJob()
+customerJob()
+contratorJob()
+// review()

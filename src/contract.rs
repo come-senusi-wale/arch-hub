@@ -37,7 +37,10 @@ pub fn execute(
         ExecuteMsg::JobRequest { contractor_domain, contractor_account_id, length } => execute::job_request(deps, env, info, contractor_domain, contractor_account_id, length),
         ExecuteMsg::AcceptRequest { job_id } => execute::accept_request(deps, env, info, job_id),
         ExecuteMsg::WithdrawalRequest { job_id } => execute::withdraw_request(deps, env, info, job_id),
-        ExecuteMsg::ApproveWithdrawal { job_id } => execute::approve_withdrawal(deps, env, info, job_id)
+        ExecuteMsg::ApproveWithdrawal { job_id } => execute::approve_withdrawal(deps, env, info, job_id),
+        ExecuteMsg::Withdraw { job_id } => execute::withdraw(deps, env, info, job_id),
+        ExecuteMsg::RejectRequest { job_id } => execute::reject_request(deps, env, info, job_id),
+        ExecuteMsg::Review { job_id, review} => execute::review(deps, env, info, job_id, review)
        
     }   
 }
@@ -48,9 +51,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Profile { id } => to_binary(&query::profile(deps, id)?),
         QueryMsg::SingleJob { job_id } => to_binary(&query::single_job(deps, job_id)?),
-        QueryMsg::ManyJob { job_id, start_after, limit } => to_binary(&query::many_job(deps, job_id, start_after, limit)?),
+        QueryMsg::ManyJob { start_after, limit } => to_binary(&query::many_job(deps, start_after, limit)?),
         QueryMsg::CustomerJob { account_id } => to_binary(&query::customer_job(deps, account_id)?),
-        QueryMsg::ContractorJob { account_id } => to_binary(&query::contractor_job(deps, account_id)?)
+        QueryMsg::ContractorJob { account_id } => to_binary(&query::contractor_job(deps, account_id)?),
+        QueryMsg::Review { job_id } => to_binary(&query::review(deps, job_id)?)
         
     }
 }

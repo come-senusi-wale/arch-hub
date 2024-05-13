@@ -35,7 +35,7 @@ async function createProfile() {
     
     const msg = {
         create_profile: {
-            name: "waledayoeig",
+            name: "waledayonten",
             hour_rate: "100000",
             cost: cost
         }
@@ -97,7 +97,7 @@ async function availability() {
     
     const msg = {
         set_availability: {
-            name: "waledayoeig.arch",
+            name: "waledayonten.arch",
             available: true,  
         }
     };
@@ -124,9 +124,9 @@ async function updateMetadata() {
     
     const msg = {
         update_metadata: {
-            name: "waledayosisd",
+            name: "waledayonin",
             update: {
-                description: "I'm in love with Zainab",
+                description: "IPFS link for user profile",
                 // Other properties stay the same
                 image: "ipfs://QmNoMUgTM82EGaTCTnuEUJDusV21UEGSgKM5RhM1C9N3WE",
                 accounts: [{username: "archid-protocol",profile: "https://github.com/archid-protocol",account_type: "github",verfication_hash: null}],
@@ -158,7 +158,7 @@ async function jobRequest() {
     
         const msg = {
             job_request: {
-                contractor_domain: "waledayoeig.arch",
+                contractor_domain: "waledayonin.arch",
                 contractor_account_id: "archway1jphqvc6pa7g4tnjpxznsn3nhzegj9fm090a5tr",
                 length: 1,
             }
@@ -267,11 +267,90 @@ async function approveWithdrawalRequest() {
     }
 }
 
+//  withraw money
+async function withdraw() {
+    try {
+    
+        const msg = {
+            withdraw: {
+                job_id: 1,
+            }
+        };
+    
+        const signContract = await signingClient.execute(
+            accounts[0].address,
+            contractAddress,
+            msg,
+            "auto",
+        );
+        
+
+        console.log("signContract: ", signContract);
+
+    } catch (error) {
+        console.log('error', error)
+    }
+}
+
+//  reject job request
+async function rejectRequest() {
+    try {
+    
+        const msg = {
+            reject_request: {
+                job_id: 2,
+            }
+        };
+    
+        const signContract = await signingClient.execute(
+            accounts[0].address,
+            contractAddress,
+            msg,
+            "auto",
+        );
+        
+
+        console.log("signContract: ", signContract);
+
+    } catch (error) {
+        console.log('error', error)
+    }
+}
+
+//  review
+async function review() {
+    try {
+    
+        const msg = {
+            review: {
+                job_id: 1,
+                review: "IPFS link for review"
+            }
+        };
+    
+        const signContract = await signingClient.execute(
+            accounts[0].address,
+            contractAddress,
+            msg,
+            "auto",
+        );
+        
+
+        console.log("signContract: ", signContract);
+
+    } catch (error) {
+        console.log('error', error)
+    }
+}
+
 // createProfile()
 // hourlyRate()
 // availability()
 // updateMetadata()
-// jobRequest()
+jobRequest()
 // acceptJobRequest()
 // withdrawalRequest()
 // approveWithdrawalRequest()
+// withdraw()
+// rejectRequest()
+// review()

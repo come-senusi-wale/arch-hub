@@ -11,7 +11,7 @@ pub enum Status {
     Complete,
     Withdraw, 
     Paid, 
-    Complain, 
+    Rejected, 
 }
 
 impl Status {
@@ -22,7 +22,7 @@ impl Status {
             Status::Complete => "COMPLETED",
             Status::Withdraw => "Withdraw",
             Status::Paid => "PAID",
-            Status::Complain => "COMPLAIN",
+            Status::Rejected => "REJECTED",
         }
     }
 }
@@ -58,6 +58,12 @@ pub struct ContractorJob {
     pub job_id: Vec<u64> 
 }
 
+#[cw_serde]
+pub struct JobReview {
+    pub job_id: u64,
+    pub review: String
+}
+
 
 
 // pub const CONFIG: Item<State> = Item::new("config");
@@ -66,5 +72,6 @@ pub const ENTRY_SEQ: Item<u64> = Item::new("entry_seq");
 pub const JOB: Map<u64, Job> = Map::new("job");
 pub const CUSTOMER_JOB: Map<&[u8], CustomerJob> = Map::new("customerjob");
 pub const CONTRACTOR_JOB: Map<&[u8], ContractorJob> = Map::new("contractorjob");
+pub const REVIEW: Map<u64, JobReview> = Map::new("review");
 
 

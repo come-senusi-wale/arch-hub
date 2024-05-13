@@ -2,7 +2,7 @@ use std::ops::Add;
 
 use archid_token::Metadata;
 use cosmwasm_std::{
-     to_binary, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg
+     coins, to_binary, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg
 };
 use cw_utils::{may_pay, must_pay};
 
@@ -17,7 +17,7 @@ use crate::{
     constant::{ARCH_REGISTRY_ADDRESS, CW721_ADDRESS, DENOM}, error::ContractError, 
     read_util::{query_current_metadata, query_name_owner}, 
     state::{
-        ContractorJob, CustomerJob, Job, Profile, Status, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE
+        ContractorJob, CustomerJob, Job, JobReview, Profile, Status, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE, REVIEW
     }, 
     write_utils::send_data_update
 };
@@ -177,7 +177,7 @@ pub fn update_metadata(
         return Err(ContractError::Unauthorized{});
     }
 
-    if id != Profile.arch_id {
+    if arch_id != Profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
@@ -404,4 +404,98 @@ pub fn approve_withdrawal(
     .add_attribute("job_id", job_id.to_string()))
 }
 
+pub fn withdraw(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    job_id: u64
+) -> Result<Response, ContractError> {
+    let mut job = JOB.load(deps.storage, job_id)?;
+
+    //check that the signer is the contractor
+    if job.contrator_id != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if job.status != Status::Withdraw {
+        return Err(ContractError::WithrawalApprove{});
+    }
+
+    let amount = job.rate.checked_mul(Uint128::new(job.lenth as u128 )).expect("totat fund");
+
+    let leftover_msg: CosmosMsg = CosmosMsg::Bank(BankMsg::Send {
+        to_address: job.contrator_id.to_string(),
+        amount: coins(amount.into(), DENOM),
+    });
+
+    job.status = Status::Paid;
+    
+    JOB.save(deps.storage, job_id, &job);
+
+    Ok(Response::new()
+    .add_attribute("method", "withdraw")
+    .add_attribute("job_id", job_id.to_string()))
+}
+
+
+pub fn reject_request(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    job_id: u64
+) -> Result<Response, ContractError> {
+    let mut job = JOB.load(deps.storage, job_id)?;
+
+    //check that the signer is the contractor
+    if job.contrator_id != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    if job.status != Status::Request {
+        return Err(ContractError::JobRequest{});
+    }
+
+
+    let amount = job.rate.checked_mul(Uint128::new(job.lenth as u128 )).expect("totat fund");
+
+    let leftover_msg: CosmosMsg = CosmosMsg::Bank(BankMsg::Send {
+        to_address: job.customer_id.to_string(),
+        amount: coins(amount.into(), DENOM),
+    });
+   
+    job.status = Status::Rejected;
+    
+    JOB.save(deps.storage, job_id, &job);
+
+    Ok(Response::new()
+    .add_attribute("method", "reject request")
+    .add_attribute("job_id", job_id.to_string()))
+}
+
+
+pub fn review(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    job_id: u64,
+    review: String
+) -> Result<Response, ContractError> {
+    let mut job = JOB.load(deps.storage, job_id)?;
+
+    //check that the signer is the customer
+    if job.customer_id != info.sender {
+        return Err(ContractError::Unauthorized{});
+    }
+
+    let reveiw = JobReview {
+        job_id,
+        review
+    };
+
+    REVIEW.save(deps.storage, job_id, &reveiw);
+
+    Ok(Response::new()
+    .add_attribute("method", "review")
+    .add_attribute("job_id", job_id.to_string()))
+}
 

@@ -3,11 +3,13 @@ use cosmwasm_std::{
 };
 
 use archid_token::{Extension, Metadata, QueryMsg as Cw721QueryMsg};
-use cw721_updatable::{NftInfoResponse, OwnerOfResponse};
+use cw721_updatable::NftInfoResponse;
 use cw_storage_plus::Bound;
 
 use crate::{
-    constant::{CW721_ADDRESS, DEFAULT_LIMIT, MAX_LIMIT}, error::ContractError, msg::{JobeResponse, ManyJobeResponse, ProfileResponse}, state::{Job, CONTRACTOR_JOB, CUSTOMER_JOB, JOB, PROFILE}
+    constant::{CW721_ADDRESS, DEFAULT_LIMIT, MAX_LIMIT}, 
+    msg::{JobeResponse, JobeReviw, ManyJobeResponse, ProfileResponse}, 
+    state::{Job, CONTRACTOR_JOB, CUSTOMER_JOB, JOB, PROFILE, REVIEW}
 };
 
 
@@ -53,10 +55,7 @@ pub fn customer_job(deps: Deps, account_id: String) -> StdResult<JobeResponse> {
      if !check_customer_job {
         return  Ok(JobeResponse {
             arch_id: entry.arch_id,
-            available: entry.available ,
-            hour_rate: entry.hour_rate.expect("0"),
             account_id: entry.account_id,
-            meta_data: res.extension,
             jobs: Vec::new()
         });
     }
@@ -65,10 +64,7 @@ pub fn customer_job(deps: Deps, account_id: String) -> StdResult<JobeResponse> {
 
     Ok(JobeResponse {
         arch_id: entry.arch_id,
-        available: entry.available ,
-        hour_rate: entry.hour_rate.expect("0"),
         account_id: entry.account_id,
-        meta_data: res.extension,
         jobs: customer_job.job_id
     })
 }
@@ -93,10 +89,7 @@ pub fn contractor_job(deps: Deps, account_id: String) -> StdResult<JobeResponse>
      if !check_contractor_job {
         return  Ok(JobeResponse {
             arch_id: entry.arch_id,
-            available: entry.available ,
-            hour_rate: entry.hour_rate.expect("0"),
             account_id: entry.account_id,
-            meta_data: res.extension,
             jobs: Vec::new()
         });
     }
@@ -105,10 +98,7 @@ pub fn contractor_job(deps: Deps, account_id: String) -> StdResult<JobeResponse>
 
     Ok(JobeResponse {
         arch_id: entry.arch_id,
-        available: entry.available ,
-        hour_rate: entry.hour_rate.expect("0"),
         account_id: entry.account_id,
-        meta_data: res.extension,
         jobs: contractor_job.job_id
     })
 }
@@ -121,7 +111,7 @@ pub fn single_job(deps: Deps, job_id: u64) -> StdResult<Job> {
 
 
 
-pub fn many_job(deps: Deps, job_id: u64, start_after: Option<u64>, limit: Option<u32>) -> StdResult<ManyJobeResponse> {
+pub fn many_job(deps: Deps, start_after: Option<u64>, limit: Option<u32>) -> StdResult<ManyJobeResponse> {
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
     let start = start_after.map(Bound::exclusive);
     let entries: StdResult<Vec<_>> = JOB
@@ -134,4 +124,22 @@ pub fn many_job(deps: Deps, job_id: u64, start_after: Option<u64>, limit: Option
     };
     Ok(result)
 
+}
+
+pub fn review(deps: Deps, job_id: u64, ) -> StdResult<JobeReviw> {
+    let review = REVIEW.load(deps.storage, job_id)?;
+    let job = JOB.load(deps.storage, review.job_id)?;
+    
+    Ok(JobeReviw {
+        job_id,
+        contrator_domain: job.contrator_domain,
+        customer_domain: job.customer_domain,
+        contrator_id: job.contrator_id,
+        customer_id: job.customer_id,
+        rate: job.rate,
+        lenth: job.lenth,
+        status: job.status,
+        start_time: job.start_time,
+        review: review.review 
+    })
 }

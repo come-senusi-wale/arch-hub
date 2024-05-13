@@ -43,6 +43,9 @@ pub enum ContractError {
     #[error("Job not yet completed")]
     JobCompleted {},
 
+    #[error("withrawal not yet approved")]
+    WithrawalApprove {},
+
     #[error("description too short (minimum description length {min_desc_length})")]
     DescriptionTooShort { min_desc_length: u64 },
 
