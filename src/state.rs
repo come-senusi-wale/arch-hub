@@ -36,6 +36,11 @@ pub struct Profile {
 }
 
 #[cw_serde]
+pub struct Account {
+    pub account_id: Addr,
+}
+
+#[cw_serde]
 pub struct Job {
     pub job_id: u64,
     pub contrator_domain: String,
@@ -68,6 +73,7 @@ pub struct JobReview {
 
 // pub const CONFIG: Item<State> = Item::new("config");
 pub const PROFILE: Map<&[u8], Profile> = Map::new("profile");
+pub const ACCOUNT: Map<&[u8], Account> = Map::new("Cccount");
 pub const ENTRY_SEQ: Item<u64> = Item::new("entry_seq");
 pub const JOB: Map<u64, Job> = Map::new("job");
 pub const CUSTOMER_JOB: Map<&[u8], CustomerJob> = Map::new("customerjob");

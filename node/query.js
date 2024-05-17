@@ -74,7 +74,6 @@ async function manyJob() {
     try {
     const msg = {
         many_job: {
-            job_id:  1,
             start_after: 0,
             limit: 50
         },
@@ -158,11 +157,34 @@ async function review() {
     }
 }
 
+//users
+async function users() {  
+    try {
+    const msg = {
+        users: {
+            start_after: 0,
+            limit: 50
+        },
+    };
+
+    const query = await client.queryContractSmart(
+        contractAddress,
+        msg
+    );
+
+    console.log("query: ", query);
+
+    } catch (error) {
+        console.log('error', error)
+    }
+}
+
 
 
 // profile()
 // sigleJob()
 // manyJob()
-customerJob()
-contratorJob()
+// customerJob()
+// contratorJob()
 // review()
+users()

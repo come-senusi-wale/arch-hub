@@ -8,7 +8,7 @@ use cw_storage_plus::Bound;
 
 use crate::{
     constant::{CW721_ADDRESS, DEFAULT_LIMIT, MAX_LIMIT}, 
-    msg::{JobeResponse, JobeReviw, ManyJobeResponse, ProfileResponse}, 
+    msg::{JobeResponse, JobeReviw, ManyJobeResponse, ProfileResponse, ProfilesResponse}, 
     state::{Job, CONTRACTOR_JOB, CUSTOMER_JOB, JOB, PROFILE, REVIEW}
 };
 
@@ -142,4 +142,20 @@ pub fn review(deps: Deps, job_id: u64, ) -> StdResult<JobeReviw> {
         start_time: job.start_time,
         review: review.review 
     })
+}
+
+pub fn profiles(deps: Deps, start_after: Option<u64>, limit: Option<u32>) -> StdResult<ProfilesResponse> {
+    let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
+    // let start = start_after.map(Bound::inclusive);
+    let entries: StdResult<Vec<_>> = PROFILE
+        .range(deps.storage, 
+            None, None, Order::Ascending)
+        .take(limit)
+        .collect();
+
+    let result = ProfilesResponse {
+        profiles: entries?.into_iter().map(|l| l.1).collect(),
+    };
+    Ok(result)
+
 }

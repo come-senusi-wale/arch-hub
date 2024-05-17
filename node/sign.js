@@ -35,7 +35,7 @@ async function createProfile() {
     
     const msg = {
         create_profile: {
-            name: "waledayonten",
+            name: "waledayoele",
             hour_rate: "100000",
             cost: cost
         }
@@ -97,7 +97,7 @@ async function availability() {
     
     const msg = {
         set_availability: {
-            name: "waledayonten.arch",
+            name: "waledayoele.arch",
             available: true,  
         }
     };
@@ -124,9 +124,9 @@ async function updateMetadata() {
     
     const msg = {
         update_metadata: {
-            name: "waledayonin",
+            name: "waledayoele.arch",
             update: {
-                description: "IPFS link for user profile",
+                description: "IPFS link for user profile for waledayoele",
                 // Other properties stay the same
                 image: "ipfs://QmNoMUgTM82EGaTCTnuEUJDusV21UEGSgKM5RhM1C9N3WE",
                 accounts: [{username: "archid-protocol",profile: "https://github.com/archid-protocol",account_type: "github",verfication_hash: null}],
@@ -158,9 +158,8 @@ async function jobRequest() {
     
         const msg = {
             job_request: {
-                contractor_domain: "waledayonin.arch",
-                contractor_account_id: "archway1jphqvc6pa7g4tnjpxznsn3nhzegj9fm090a5tr",
-                length: 1,
+                contractor_domain: "waledayoele.arch",
+                duration: 1,
             }
         };
 

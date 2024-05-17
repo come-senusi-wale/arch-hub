@@ -34,7 +34,7 @@ pub fn execute(
         ExecuteMsg::UpdateHourlyRate { name, hour_rate } => execute::update_hour_rate(deps, env, info, name, hour_rate),
         ExecuteMsg::SetAvailability { name, available } => execute::set_availability(deps, env, info, name, available),
         ExecuteMsg::UpdateMetadata { name, update } => execute::update_metadata(deps, env, info, name, update),
-        ExecuteMsg::JobRequest { contractor_domain, contractor_account_id, length } => execute::job_request(deps, env, info, contractor_domain, contractor_account_id, length),
+        ExecuteMsg::JobRequest { contractor_domain, duration } => execute::job_request(deps, env, info, contractor_domain, duration),
         ExecuteMsg::AcceptRequest { job_id } => execute::accept_request(deps, env, info, job_id),
         ExecuteMsg::WithdrawalRequest { job_id } => execute::withdraw_request(deps, env, info, job_id),
         ExecuteMsg::ApproveWithdrawal { job_id } => execute::approve_withdrawal(deps, env, info, job_id),
@@ -54,7 +54,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::ManyJob { start_after, limit } => to_binary(&query::many_job(deps, start_after, limit)?),
         QueryMsg::CustomerJob { account_id } => to_binary(&query::customer_job(deps, account_id)?),
         QueryMsg::ContractorJob { account_id } => to_binary(&query::contractor_job(deps, account_id)?),
-        QueryMsg::Review { job_id } => to_binary(&query::review(deps, job_id)?)
+        QueryMsg::Review { job_id } => to_binary(&query::review(deps, job_id)?),
+        QueryMsg::Users { start_after, limit } => to_binary(&query::profiles(deps, start_after, limit)?)
         
     }
 }

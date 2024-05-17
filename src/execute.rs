@@ -17,7 +17,7 @@ use crate::{
     constant::{ARCH_REGISTRY_ADDRESS, CW721_ADDRESS, DENOM}, error::ContractError, 
     read_util::{query_current_metadata, query_name_owner}, 
     state::{
-        ContractorJob, CustomerJob, Job, JobReview, Profile, Status, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE, REVIEW
+        Account, ContractorJob, CustomerJob, Job, JobReview, Profile, Status, ACCOUNT, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE, REVIEW
     }, 
     write_utils::send_data_update
 };
@@ -51,13 +51,17 @@ pub fn create_profile(
 
     let arch_id = name.clone() + &String::from(".arch");
 
-    // let key = arch_id.as_str().as_bytes();
+    let account_key = arch_id.as_str().as_bytes();
 
     let profile = Profile {
         arch_id: arch_id.clone(),
         available: false,
         account_id: info.sender.clone(),
         hour_rate: Some(set_hour_rate)
+    };
+
+    let account = Account{
+        account_id: info.sender.clone()
     };
 
     let registry_contract = ARCH_REGISTRY_ADDRESS;
@@ -84,6 +88,7 @@ pub fn create_profile(
         .into();
 
     PROFILE.save(deps.storage, key, &profile)?;
+    ACCOUNT.save(deps.storage, account_key, &account)?;
     
     let messages = vec![register_resp];
     Ok(Response::new().add_messages(messages))
@@ -163,7 +168,11 @@ pub fn update_metadata(
     id: String,
     update: MetaDataUpdateMsg,
 ) -> Result<Response, ContractError> {
-    let arch_id = id.clone() + &String::from(".arch");
+    //let arch_id = id.clone() + &String::from(".arch");
+
+    let delimiter = ".";
+    let mut parts = id.splitn(2, delimiter);
+    let name = parts.next().unwrap();
 
     // let key = arch_id.as_str().as_bytes();
     let key = info.sender.as_str().as_bytes();
@@ -177,7 +186,7 @@ pub fn update_metadata(
         return Err(ContractError::Unauthorized{});
     }
 
-    if arch_id != Profile.arch_id {
+    if id != Profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
@@ -185,7 +194,7 @@ pub fn update_metadata(
 
     // Create registration msg
     let update_metatdata_msg: ArchIdExecuteMsg = ArchIdExecuteMsg::UpdateUserDomainData { 
-        name: id.clone(), 
+        name: name.to_string(), 
         metadata_update: update 
     } ;
     let update_metatdata_resp: CosmosMsg = WasmMsg::Execute {
@@ -199,7 +208,7 @@ pub fn update_metadata(
     Ok(Response::new()
         .add_messages(messages)
         .add_attribute("action", "metadata_update")
-        .add_attribute("domain", arch_id.clone()))
+        .add_attribute("domain", id.clone()))
 }
 
 
@@ -208,13 +217,15 @@ pub fn job_request(
     _env: Env,
     info: MessageInfo,
     contractor_domain: String,
-    contractor_account_id: String,
-    length: u32
+    // contractor_account_id: String,
+    duration: u32
 ) -> Result<Response, ContractError> {
     // let contractor_arch_id = contractor_domain.clone() + &String::from(".arch");
 
-    // let key = arch_id.as_str().as_bytes();
-    let key = contractor_account_id.as_str().as_bytes();
+    let account_key = contractor_domain.as_str().as_bytes();
+    let account = ACCOUNT.load(deps.storage, account_key)?;
+
+    let key = account.account_id.as_str().as_bytes();
     let contrator_profile = PROFILE.load(deps.storage, key)?;
     let contrator_profile_address = deps.api.addr_validate(contrator_profile.account_id.as_str())?;
 
@@ -224,7 +235,7 @@ pub fn job_request(
 
     let fund = may_pay(&info, &String::from(DENOM))?;
 
-    let total_cost = contrator_profile.hour_rate.expect("contractor hour rate") * Uint128::new(length as u128 );
+    let total_cost = contrator_profile.hour_rate.expect("contractor hour rate") * Uint128::new(duration as u128 );
 
     if fund < Uint128::from(total_cost) {
         return Err(ContractError::InsufficientFundsSent{});
@@ -236,7 +247,7 @@ pub fn job_request(
     }
 
     //check that the address is owner of id
-    if contrator_profile_address != deps.api.addr_validate(contractor_account_id.as_str())? {
+    if contrator_profile_address != account.account_id {
         return Err(ContractError::InvalidContractorId {});
     }
 
@@ -257,7 +268,7 @@ pub fn job_request(
         contrator_id: contrator_profile.account_id,
         customer_id: customer_profile.account_id,
         rate: contrator_profile.hour_rate.expect("rate"),
-        lenth: length,
+        lenth: duration,
         status: Status::Request,
         start_time: 0
     };

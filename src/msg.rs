@@ -2,7 +2,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use archid_token::Metadata;
 
-use crate::{archid_registry::MetaDataUpdateMsg, state::{Job, Status}};
+use crate::{archid_registry::MetaDataUpdateMsg, state::{Job, Profile, Status}};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -30,8 +30,7 @@ pub enum ExecuteMsg {
     },
     JobRequest {
         contractor_domain: String,
-        contractor_account_id: String,
-        length: u32,
+        duration: u32,
     },
     AcceptRequest {
         job_id: u64,
@@ -83,6 +82,11 @@ pub enum QueryMsg {
     Review {
         job_id: u64
     },
+    #[returns(ProfilesResponse)]
+    Users {
+        start_after: Option<u64>, 
+        limit: Option<u32>
+    },
 }
 
 #[cw_serde]
@@ -104,6 +108,11 @@ pub struct JobeResponse {
 #[cw_serde]
 pub struct ManyJobeResponse {
     pub jobs: Vec<Job>,
+}
+
+#[cw_serde]
+pub struct ProfilesResponse {
+    pub profiles: Vec<Profile>,
 }
 
 #[cw_serde]
