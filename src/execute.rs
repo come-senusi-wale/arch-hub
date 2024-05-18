@@ -1,10 +1,9 @@
 use std::ops::Add;
 
-use archid_token::Metadata;
 use cosmwasm_std::{
      coins, to_binary, BankMsg, Coin, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg
 };
-use cw_utils::{may_pay, must_pay};
+use cw_utils::may_pay;
 
 
 // use archid_registry::msg::ExecuteMsg as ArchIdExecuteMsg;
