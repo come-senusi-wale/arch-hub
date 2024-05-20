@@ -58,7 +58,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::CustomerJob { account_id } => to_binary(&query::customer_job(deps, account_id)?),
         QueryMsg::ContractorJob { account_id } => to_binary(&query::contractor_job(deps, account_id)?),
         QueryMsg::Review { job_id } => to_binary(&query::review(deps, job_id)?),
-        QueryMsg::Users { start_after, limit } => to_binary(&query::profiles(deps, start_after, limit)?)
+        QueryMsg::Users { start_after, limit } => to_binary(&query::profiles(deps, start_after, limit)?),
+        QueryMsg::ProfileByName { name } => to_binary(&query::profil_by_name(deps, name)?)
         
     }
 }

@@ -61,6 +61,10 @@ pub enum QueryMsg {
     Profile {
         id: String
     },
+    #[returns(ProfileByNameResponse)]
+    ProfileByName {
+        name: String
+    },
     #[returns(Job)]
     SingleJob {
         job_id: u64
@@ -96,6 +100,16 @@ pub struct ProfileResponse {
     pub hour_rate: Uint128,
     pub account_id: Addr,
     pub meta_data: Metadata
+}
+
+#[cw_serde]
+pub struct ProfileByNameResponse {
+    pub arch_id: String,
+    pub available: bool,
+    pub hour_rate: Uint128,
+    pub account_id: Addr,
+    pub meta_data: Metadata,
+    pub jobs: Vec<u64> 
 }
 
 #[cw_serde]

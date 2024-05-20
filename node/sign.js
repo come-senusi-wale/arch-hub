@@ -35,7 +35,7 @@ async function createProfile() {
     
     const msg = {
         create_profile: {
-            name: "waledayoele",
+            name: "waledayotwe",
             hour_rate: "100000",
             cost: cost
         }
@@ -97,7 +97,7 @@ async function availability() {
     
     const msg = {
         set_availability: {
-            name: "waledayoele.arch",
+            name: "waledayotwe.arch",
             available: true,  
         }
     };
@@ -124,7 +124,7 @@ async function updateMetadata() {
     
     const msg = {
         update_metadata: {
-            name: "waledayoele.arch",
+            name: "waledayotwe.arch",
             update: {
                 description: "IPFS link for user profile for waledayoele",
                 // Other properties stay the same
@@ -158,7 +158,7 @@ async function jobRequest() {
     
         const msg = {
             job_request: {
-                contractor_domain: "waledayoele.arch",
+                contractor_domain: "waledayotwe.arch",
                 duration: 1,
             }
         };

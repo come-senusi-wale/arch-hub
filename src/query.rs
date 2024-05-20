@@ -8,8 +8,8 @@ use cw_storage_plus::Bound;
 
 use crate::{
     constant::{CW721_ADDRESS, DEFAULT_LIMIT, MAX_LIMIT}, 
-    msg::{JobeResponse, JobeReviw, ManyJobeResponse, ProfileResponse, ProfilesResponse}, 
-    state::{Job, CONTRACTOR_JOB, CUSTOMER_JOB, JOB, PROFILE, REVIEW}
+    msg::{JobeResponse, JobeReviw, ManyJobeResponse, ProfileByNameResponse, ProfileResponse, ProfilesResponse}, 
+    state::{Job, ACCOUNT, CONTRACTOR_JOB, CUSTOMER_JOB, JOB, PROFILE, REVIEW}
 };
 
 
@@ -50,7 +50,7 @@ pub fn customer_job(deps: Deps, account_id: String) -> StdResult<JobeResponse> {
         contract_addr: CW721_ADDRESS.to_string(),
         msg: to_binary(&query_msg).unwrap(),
     });
-    let res: NftInfoResponse<Metadata> = deps.querier.query(&req)?;
+    let _res: NftInfoResponse<Metadata> = deps.querier.query(&req)?;
 
      if !check_customer_job {
         return  Ok(JobeResponse {
@@ -84,7 +84,7 @@ pub fn contractor_job(deps: Deps, account_id: String) -> StdResult<JobeResponse>
         contract_addr: CW721_ADDRESS.to_string(),
         msg: to_binary(&query_msg).unwrap(),
     });
-    let res: NftInfoResponse<Metadata> = deps.querier.query(&req)?;
+    let _res: NftInfoResponse<Metadata> = deps.querier.query(&req)?;
 
      if !check_contractor_job {
         return  Ok(JobeResponse {
@@ -158,4 +158,47 @@ pub fn profiles(deps: Deps, start_after: Option<u64>, limit: Option<u32>) -> Std
     };
     Ok(result)
 
+}
+
+pub fn profil_by_name(deps: Deps, name: String) -> StdResult<ProfileByNameResponse> {
+    let account_key = name.as_str().as_bytes();
+    let account = ACCOUNT.load(deps.storage, account_key)?;
+
+    let key = account.account_id.as_str().as_bytes();
+
+    let entry = PROFILE.load(deps.storage, key)?;
+
+    let query_msg: archid_token::QueryMsg<Extension> = Cw721QueryMsg::NftInfo {
+        token_id: entry.arch_id.to_owned(),
+    };
+    let req = QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: CW721_ADDRESS.to_string(),
+        msg: to_binary(&query_msg).unwrap(),
+    });
+    let res: NftInfoResponse<Metadata> = deps.querier.query(&req)?;
+
+    let check_contractor_job = CONTRACTOR_JOB.has(deps.storage, key);
+
+    if !check_contractor_job {
+        return  Ok(ProfileByNameResponse {
+            arch_id: entry.arch_id,
+            available: entry.available ,
+            hour_rate: entry.hour_rate.expect("0"),
+            account_id: entry.account_id,
+            meta_data: res.extension,
+            jobs: Vec::new()
+        });
+    }
+
+    let contractor_job = CONTRACTOR_JOB.load(deps.storage, key)?;
+
+
+    Ok(ProfileByNameResponse {
+        arch_id: entry.arch_id,
+        available: entry.available ,
+        hour_rate: entry.hour_rate.expect("0"),
+        account_id: entry.account_id,
+        meta_data: res.extension,
+        jobs: contractor_job.job_id
+    })
 }

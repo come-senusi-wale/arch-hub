@@ -180,6 +180,29 @@ async function users() {
 }
 
 
+//profile by name
+async function profileByName
+() {  
+    try {
+    const msg = {
+        profile_by_name: {
+            name: "waledayotwe.arch"
+        },
+    };
+
+    const query = await client.queryContractSmart(
+        contractAddress,
+        msg
+    );
+
+    console.log("query: ", query);
+
+    } catch (error) {
+        console.log('error', error)
+    }
+}
+
+
 
 // profile()
 // sigleJob()
@@ -187,4 +210,5 @@ async function users() {
 // customerJob()
 // contratorJob()
 // review()
-users()
+// users()
+profileByName()

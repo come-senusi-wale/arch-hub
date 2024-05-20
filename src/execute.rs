@@ -64,9 +64,6 @@ pub fn create_profile(
     };
 
     let registry_contract = ARCH_REGISTRY_ADDRESS;
-    // Do not add the `.arch` suffix when registering a domain 
-    // and remember to get the actual cost per year by querying
-    // the `Config` entry point
     let desired_domain_name = name; 
     let cost_per_year: u128 = cost;
     let denom = DENOM; // (Or "aconst" for testnet)
@@ -91,8 +88,6 @@ pub fn create_profile(
     
     let messages = vec![register_resp];
     Ok(Response::new().add_messages(messages))
-
-    // Ok(Response::default())
 }
 
 
@@ -107,22 +102,22 @@ pub fn update_hour_rate(
     // let key = id.as_str().as_bytes();
     let key = info.sender.as_str().as_bytes();
 
-    let mut Profile = PROFILE.load(deps.storage, key)?;
+    let mut profile = PROFILE.load(deps.storage, key)?;
 
-    let profile_address = deps.api.addr_validate(Profile.account_id.as_str())?;
+    let profile_address = deps.api.addr_validate(profile.account_id.as_str())?;
 
     //check that the address is owner of id
     if profile_address != info.sender {
         return Err(ContractError::Unauthorized{});
     }
 
-    if id != Profile.arch_id {
+    if id != profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
-    Profile.hour_rate = Some(hour_rate);
+    profile.hour_rate = Some(hour_rate);
 
-    PROFILE.save(deps.storage, key, &Profile)?;
+    PROFILE.save(deps.storage, key, &profile)?;
     Ok(Response::new()
         .add_attribute("method", "pudate_hourly_rate")
         .add_attribute("arch_id", id.to_string()))
@@ -138,22 +133,22 @@ pub fn set_availability(
     // let key = id.as_str().as_bytes();
     let key = info.sender.as_str().as_bytes();
 
-    let mut Profile = PROFILE.load(deps.storage, key)?;
+    let mut profile = PROFILE.load(deps.storage, key)?;
 
-    let profile_address = deps.api.addr_validate(Profile.account_id.as_str())?;
+    let profile_address = deps.api.addr_validate(profile.account_id.as_str())?;
 
     //check that the address is owner of id
     if profile_address != info.sender {
         return Err(ContractError::Unauthorized{});
     }
 
-    if id != Profile.arch_id {
+    if id != profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
-    Profile.available = available;
+    profile.available = available;
 
-    PROFILE.save(deps.storage, key, &Profile)?;
+    PROFILE.save(deps.storage, key, &profile)?;
     Ok(Response::new()
         .add_attribute("method", "set_availability")
         .add_attribute("arch_id", id.to_string()))
@@ -167,8 +162,6 @@ pub fn update_metadata(
     id: String,
     update: MetaDataUpdateMsg,
 ) -> Result<Response, ContractError> {
-    //let arch_id = id.clone() + &String::from(".arch");
-
     let delimiter = ".";
     let mut parts = id.splitn(2, delimiter);
     let name = parts.next().unwrap();
@@ -176,16 +169,16 @@ pub fn update_metadata(
     // let key = arch_id.as_str().as_bytes();
     let key = info.sender.as_str().as_bytes();
 
-    let Profile = PROFILE.load(deps.storage, key)?;
+    let profile = PROFILE.load(deps.storage, key)?;
 
-    let profile_address = deps.api.addr_validate(Profile.account_id.as_str())?;
+    let profile_address = deps.api.addr_validate(profile.account_id.as_str())?;
 
     //check that the address is owner of id
     if profile_address != info.sender {
         return Err(ContractError::Unauthorized{});
     }
 
-    if id != Profile.arch_id {
+    if id != profile.arch_id {
         return Err(ContractError::Unauthorized{});
     }
 
@@ -216,11 +209,8 @@ pub fn job_request(
     _env: Env,
     info: MessageInfo,
     contractor_domain: String,
-    // contractor_account_id: String,
     duration: u32
 ) -> Result<Response, ContractError> {
-    // let contractor_arch_id = contractor_domain.clone() + &String::from(".arch");
-
     let account_key = contractor_domain.as_str().as_bytes();
     let account = ACCOUNT.load(deps.storage, account_key)?;
 
@@ -282,7 +272,7 @@ pub fn job_request(
 
         customer_job.job_id.push(job_id);
 
-        CUSTOMER_JOB.save(deps.storage, customer_key, &customer_job);
+        let _ = CUSTOMER_JOB.save(deps.storage, customer_key, &customer_job);
 
     }else {
         let mut job_ids = Vec::new();
@@ -292,7 +282,7 @@ pub fn job_request(
         let customer_job = CustomerJob {
             job_id: job_ids
         };
-        CUSTOMER_JOB.save(deps.storage, customer_key, &customer_job);
+        let _ = CUSTOMER_JOB.save(deps.storage, customer_key, &customer_job);
     }
 
 
@@ -304,7 +294,7 @@ pub fn job_request(
 
         contracor_job.job_id.push(job_id);
 
-        CONTRACTOR_JOB.save(deps.storage, key, &contracor_job);
+        let _ = CONTRACTOR_JOB.save(deps.storage, key, &contracor_job);
 
     }else {
         let mut job_ids = Vec::new();
@@ -314,7 +304,7 @@ pub fn job_request(
         let contractor_job = ContractorJob {
             job_id: job_ids
         };
-        CONTRACTOR_JOB.save(deps.storage, key, &contractor_job);
+        let _ = CONTRACTOR_JOB.save(deps.storage, key, &contractor_job);
     }
 
     Ok(Response::new()
@@ -345,7 +335,7 @@ pub fn accept_request(
     job.start_time = start_time;
     job.status = Status::Start;
     
-    JOB.save(deps.storage, job_id, &job);
+    let _ = JOB.save(deps.storage, job_id, &job);
 
     Ok(Response::new()
     .add_attribute("method", "accept request")
@@ -380,7 +370,7 @@ pub fn withdraw_request(
 
     job.status = Status::Complete;
     
-    JOB.save(deps.storage, job_id, &job);
+    let _ = JOB.save(deps.storage, job_id, &job);
 
     Ok(Response::new()
     .add_attribute("method", "withraw request")
@@ -390,7 +380,7 @@ pub fn withdraw_request(
 
 pub fn approve_withdrawal(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     job_id: u64
 ) -> Result<Response, ContractError> {
@@ -407,7 +397,7 @@ pub fn approve_withdrawal(
 
     job.status = Status::Withdraw;
     
-    JOB.save(deps.storage, job_id, &job);
+    let _ = JOB.save(deps.storage, job_id, &job);
 
     Ok(Response::new()
     .add_attribute("method", "approve withraw request")
@@ -416,7 +406,7 @@ pub fn approve_withdrawal(
 
 pub fn withdraw(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     job_id: u64
 ) -> Result<Response, ContractError> {
@@ -433,14 +423,14 @@ pub fn withdraw(
 
     let amount = job.rate.checked_mul(Uint128::new(job.lenth as u128 )).expect("totat fund");
 
-    let leftover_msg: CosmosMsg = CosmosMsg::Bank(BankMsg::Send {
+    let _leftover_msg: CosmosMsg = CosmosMsg::Bank(BankMsg::Send {
         to_address: job.contrator_id.to_string(),
         amount: coins(amount.into(), DENOM),
     });
 
     job.status = Status::Paid;
     
-    JOB.save(deps.storage, job_id, &job);
+    let _ = JOB.save(deps.storage, job_id, &job);
 
     Ok(Response::new()
     .add_attribute("method", "withdraw")
@@ -450,7 +440,7 @@ pub fn withdraw(
 
 pub fn reject_request(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     job_id: u64
 ) -> Result<Response, ContractError> {
@@ -468,14 +458,14 @@ pub fn reject_request(
 
     let amount = job.rate.checked_mul(Uint128::new(job.lenth as u128 )).expect("totat fund");
 
-    let leftover_msg: CosmosMsg = CosmosMsg::Bank(BankMsg::Send {
+    let _leftover_msg: CosmosMsg = CosmosMsg::Bank(BankMsg::Send {
         to_address: job.customer_id.to_string(),
         amount: coins(amount.into(), DENOM),
     });
    
     job.status = Status::Rejected;
     
-    JOB.save(deps.storage, job_id, &job);
+    let _ = JOB.save(deps.storage, job_id, &job);
 
     Ok(Response::new()
     .add_attribute("method", "reject request")
@@ -485,12 +475,12 @@ pub fn reject_request(
 
 pub fn review(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     job_id: u64,
     review: String
 ) -> Result<Response, ContractError> {
-    let mut job = JOB.load(deps.storage, job_id)?;
+    let job = JOB.load(deps.storage, job_id)?;
 
     //check that the signer is the customer
     if job.customer_id != info.sender {
@@ -502,7 +492,7 @@ pub fn review(
         review
     };
 
-    REVIEW.save(deps.storage, job_id, &reveiw);
+    let _ = REVIEW.save(deps.storage, job_id, &reveiw);
 
     Ok(Response::new()
     .add_attribute("method", "review")
