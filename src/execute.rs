@@ -240,6 +240,11 @@ pub fn job_request(
         return Err(ContractError::InvalidContractorId {});
     }
 
+     // you can not send job reequest to yourself
+     if info.sender == contrator_profile_address {
+        return Err(ContractError::InvalidAccount {});
+    }
+
     if contractor_domain != contrator_profile.arch_id {
         return Err(ContractError::InvalidContractorDomainName {});
     }

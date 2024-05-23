@@ -46,4 +46,7 @@ pub enum ContractError {
     #[error("withrawal not yet approved")]
     WithrawalApprove {},
 
+    #[error("you can not send job request to yourself")]
+    InvalidAccount {},
+
 }

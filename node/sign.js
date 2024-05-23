@@ -35,7 +35,7 @@ async function createProfile() {
     
     const msg = {
         create_profile: {
-            name: "waledayotwe",
+            name: "waledayofort",
             hour_rate: "100000",
             cost: cost
         }
@@ -97,7 +97,7 @@ async function availability() {
     
     const msg = {
         set_availability: {
-            name: "waledayotwe.arch",
+            name: "waledayofort.arch",
             available: true,  
         }
     };
@@ -158,7 +158,7 @@ async function jobRequest() {
     
         const msg = {
             job_request: {
-                contractor_domain: "waledayotwe.arch",
+                contractor_domain: "waledayofort.arch",
                 duration: 1,
             }
         };
@@ -346,7 +346,7 @@ async function review() {
 // hourlyRate()
 // availability()
 // updateMetadata()
-jobRequest()
+// jobRequest()
 // acceptJobRequest()
 // withdrawalRequest()
 // approveWithdrawalRequest()
