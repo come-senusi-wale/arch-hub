@@ -33,10 +33,10 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateProfile {name, hour_rate, cost, skill} => execute::create_profile(deps, env, info, name, hour_rate, cost, skill), 
+        ExecuteMsg::CreateProfile {name, hour_rate, cost, skill, preference} => execute::create_profile(deps, env, info, name, hour_rate, cost, skill, preference), 
         ExecuteMsg::UpdateHourlyRate { name, hour_rate } => execute::update_hour_rate(deps, env, info, name, hour_rate),
         ExecuteMsg::SetAvailability { name, available } => execute::set_availability(deps, env, info, name, available),
-        ExecuteMsg::UpdateMetadata { name, update } => execute::update_metadata(deps, env, info, name, update),
+        ExecuteMsg::UpdateMetadata { name, skill, preference } => execute::update_metadata(deps, env, info, name, skill, preference),
         ExecuteMsg::JobRequest { contractor_domain, duration } => execute::job_request(deps, env, info, contractor_domain, duration),
         ExecuteMsg::AcceptRequest { job_id } => execute::accept_request(deps, env, info, job_id),
         ExecuteMsg::WithdrawalRequest { job_id } => execute::withdraw_request(deps, env, info, job_id),
@@ -68,7 +68,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg(test)]
 mod tests {
     use crate::msg::ManyJobeResponse;
-    use crate::state::Job;
+    use crate::state::{Job, Preferences};
 
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
@@ -105,6 +105,14 @@ mod tests {
 
         assert_eq!(0, res.messages.len());
 
+        let preference = Preferences{
+            contract: true,
+            fulltime: true,
+            remote: true,
+            enterprise: true,
+            startup: true,
+        };
+
         // create profile
         let info = mock_info("user", &[Coin {denom: "aconst".to_string(), amount: Uint128::new(2000000000000000000 as u128)}]);
 
@@ -112,7 +120,8 @@ mod tests {
             name: "walerr".to_string(),
             hour_rate: Some(Uint128::new(200 as u128 )),
             cost: 100000000000000000,
-            skill: "programmer".to_string()
+            skill: "programmer".to_string(),
+            preference
         };
 
         execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();

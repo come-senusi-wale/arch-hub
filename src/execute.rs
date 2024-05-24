@@ -16,7 +16,7 @@ use crate::{
     constant::{ARCH_REGISTRY_ADDRESS, CW721_ADDRESS, DENOM}, error::ContractError, 
     read_util::{query_current_metadata, query_name_owner}, 
     state::{
-        Account, ContractorJob, CustomerJob, Job, JobReview, Profile, Status, ACCOUNT, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE, REVIEW
+        Account, ContractorJob, CustomerJob, Job, JobReview, Preferences, Profile, Status, ACCOUNT, CONTRACTOR_JOB, CUSTOMER_JOB, ENTRY_SEQ, JOB, PROFILE, REVIEW
     }, 
     write_utils::send_data_update
 };
@@ -29,6 +29,7 @@ pub fn create_profile(
     hour_rate: Option<Uint128>,
     cost: u128,
     skill: String,
+    preference: Preferences
 ) -> Result<Response, ContractError> {
     let key = info.sender.as_str().as_bytes();
 
@@ -58,7 +59,8 @@ pub fn create_profile(
         available: false,
         account_id: info.sender.clone(),
         hour_rate: Some(set_hour_rate),
-        skill
+        skill,
+        preference,
     };
 
     let account = Account{
@@ -162,7 +164,9 @@ pub fn update_metadata(
     _env: Env,
     info: MessageInfo,
     id: String,
-    update: MetaDataUpdateMsg,
+    // update: MetaDataUpdateMsg,
+    skill: String,
+    preference: Preferences
 ) -> Result<Response, ContractError> {
     let delimiter = ".";
     let mut parts = id.splitn(2, delimiter);
@@ -171,7 +175,7 @@ pub fn update_metadata(
     // let key = arch_id.as_str().as_bytes();
     let key = info.sender.as_str().as_bytes();
 
-    let profile = PROFILE.load(deps.storage, key)?;
+    let mut profile = PROFILE.load(deps.storage, key)?;
 
     let profile_address = deps.api.addr_validate(profile.account_id.as_str())?;
 
@@ -184,24 +188,28 @@ pub fn update_metadata(
         return Err(ContractError::Unauthorized{});
     }
 
-    let registry_contract = ARCH_REGISTRY_ADDRESS;
+    // let registry_contract = ARCH_REGISTRY_ADDRESS;
 
-    // Create registration msg
-    let update_metatdata_msg: ArchIdExecuteMsg = ArchIdExecuteMsg::UpdateUserDomainData { 
-        name: name.to_string(), 
-        metadata_update: update 
-    } ;
-    let update_metatdata_resp: CosmosMsg = WasmMsg::Execute {
-        contract_addr: registry_contract.into(),
-        msg: to_binary(&update_metatdata_msg)?,
-        funds: vec![]
-    }.into();
+    // // Create registration msg
+    // let update_metatdata_msg: ArchIdExecuteMsg = ArchIdExecuteMsg::UpdateUserDomainData { 
+    //     name: name.to_string(), 
+    //     metadata_update: update 
+    // } ;
+    // let update_metatdata_resp: CosmosMsg = WasmMsg::Execute {
+    //     contract_addr: registry_contract.into(),
+    //     msg: to_binary(&update_metatdata_msg)?,
+    //     funds: vec![]
+    // }.into();
         
-    let messages = vec![update_metatdata_resp];
+    // let messages = vec![update_metatdata_resp];
+
+    profile.skill = skill;
+    profile.preference = preference;
+
+    PROFILE.save(deps.storage, key, &profile)?;
 
     Ok(Response::new()
-        .add_messages(messages)
-        .add_attribute("action", "metadata_update")
+        .add_attribute("action", "update skill")
         .add_attribute("domain", id.clone()))
 }
 

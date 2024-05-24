@@ -32,13 +32,22 @@ async function createProfile() {
     let cost = '1000000000000000000'
     
     try {
+
+    const preference = {
+        contract: false,
+        fulltime: false,
+        remote: false,
+        enterprise: false,
+        startup: false,
+    }
     
     const msg = {
         create_profile: {
-            name: "waledayofif",
+            name: "waledayosixt",
             hour_rate: "100000",
             cost: cost,
-            skill: "programmer"
+            skill: "programmer",
+            preference: preference
         }
     };
 
@@ -122,17 +131,18 @@ async function availability() {
 // update metadata
 async function updateMetadata() {
     try {
-    
+        const preference = {
+            contract: true,
+            fulltime: false,
+            remote: true,
+            enterprise: false,
+            startup: false,
+        }
     const msg = {
         update_metadata: {
-            name: "waledayofif.arch",
-            update: {
-                description: "IPFS link for user profile for waledayoele",
-                // Other properties stay the same
-                image: "ipfs://QmNoMUgTM82EGaTCTnuEUJDusV21UEGSgKM5RhM1C9N3WE",
-                accounts: [{username: "archid-protocol",profile: "https://github.com/archid-protocol",account_type: "github",verfication_hash: null}],
-                websites: [{url: "https://archid.app",domain: "dapp.archid.arch",verfication_hash: null}]
-            },  
+            name: "waledayosixt.arch",
+            skill: "blockchain developer",
+            preference: preference
         }
 
     };

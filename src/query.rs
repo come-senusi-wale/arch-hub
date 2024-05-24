@@ -32,6 +32,7 @@ pub fn profile(deps: Deps, id: String) -> StdResult<ProfileResponse> {
         available: entry.available ,
         hour_rate: entry.hour_rate.expect("0"),
         skill: entry.skill,
+        preference: entry.preference,
         account_id: entry.account_id,
         meta_data: res.extension
     })
@@ -186,6 +187,7 @@ pub fn profil_by_name(deps: Deps, name: String) -> StdResult<ProfileByNameRespon
             available: entry.available ,
             hour_rate: entry.hour_rate.expect("0"),
             skill: entry.skill,
+            preference: entry.preference,
             account_id: entry.account_id,
             meta_data: res.extension,
             jobs: Vec::new()
@@ -200,6 +202,7 @@ pub fn profil_by_name(deps: Deps, name: String) -> StdResult<ProfileByNameRespon
         available: entry.available ,
         hour_rate: entry.hour_rate.expect("0"),
         skill: entry.skill,
+        preference: entry.preference,
         account_id: entry.account_id,
         meta_data: res.extension,
         jobs: contractor_job.job_id

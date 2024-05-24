@@ -2,7 +2,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use archid_token::Metadata;
 
-use crate::{archid_registry::MetaDataUpdateMsg, state::{Job, Profile, Status}};
+use crate::{archid_registry::MetaDataUpdateMsg, state::{Job, Preferences, Profile, Status}};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -16,6 +16,7 @@ pub enum ExecuteMsg {
         hour_rate: Option<Uint128>,
         cost: u128,
         skill: String,
+        preference: Preferences,
     },
     UpdateHourlyRate {
         name: String,
@@ -27,7 +28,8 @@ pub enum ExecuteMsg {
     },
     UpdateMetadata {
         name: String,
-        update: MetaDataUpdateMsg
+        skill: String,
+        preference: Preferences
     },
     JobRequest {
         contractor_domain: String,
@@ -100,6 +102,7 @@ pub struct ProfileResponse {
     pub available: bool,
     pub hour_rate: Uint128,
     pub skill: String,
+    pub preference: Preferences,
     pub account_id: Addr,
     pub meta_data: Metadata
 }
@@ -110,6 +113,7 @@ pub struct ProfileByNameResponse {
     pub available: bool,
     pub hour_rate: Uint128,
     pub skill: String,
+    pub preference: Preferences,
     pub account_id: Addr,
     pub meta_data: Metadata,
     pub jobs: Vec<u64> 

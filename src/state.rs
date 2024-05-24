@@ -28,12 +28,22 @@ impl Status {
 }
 
 #[cw_serde]
+pub struct Preferences {
+    pub contract: bool,
+    pub fulltime: bool,
+    pub remote: bool,
+    pub enterprise: bool,
+    pub startup: bool,
+}
+
+#[cw_serde]
 pub struct Profile {
     pub arch_id: String,
     pub available: bool,
     pub hour_rate: Option<Uint128>,
     pub account_id: Addr,
     pub skill: String,
+    pub preference: Preferences
 }
 
 #[cw_serde]
