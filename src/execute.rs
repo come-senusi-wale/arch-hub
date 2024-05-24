@@ -27,7 +27,8 @@ pub fn create_profile(
     info: MessageInfo,
     name: String,
     hour_rate: Option<Uint128>,
-    cost: u128
+    cost: u128,
+    skill: String,
 ) -> Result<Response, ContractError> {
     let key = info.sender.as_str().as_bytes();
 
@@ -56,7 +57,8 @@ pub fn create_profile(
         arch_id: arch_id.clone(),
         available: false,
         account_id: info.sender.clone(),
-        hour_rate: Some(set_hour_rate)
+        hour_rate: Some(set_hour_rate),
+        skill
     };
 
     let account = Account{

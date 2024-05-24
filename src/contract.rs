@@ -33,7 +33,7 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateProfile {name, hour_rate, cost} => execute::create_profile(deps, env, info, name, hour_rate, cost), 
+        ExecuteMsg::CreateProfile {name, hour_rate, cost, skill} => execute::create_profile(deps, env, info, name, hour_rate, cost, skill), 
         ExecuteMsg::UpdateHourlyRate { name, hour_rate } => execute::update_hour_rate(deps, env, info, name, hour_rate),
         ExecuteMsg::SetAvailability { name, available } => execute::set_availability(deps, env, info, name, available),
         ExecuteMsg::UpdateMetadata { name, update } => execute::update_metadata(deps, env, info, name, update),
@@ -111,7 +111,8 @@ mod tests {
         let msg = ExecuteMsg::CreateProfile {
             name: "walerr".to_string(),
             hour_rate: Some(Uint128::new(200 as u128 )),
-            cost: 100000000000000000
+            cost: 100000000000000000,
+            skill: "programmer".to_string()
         };
 
         execute(deps.as_mut(), env.clone(), info.clone(), msg).unwrap();

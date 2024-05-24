@@ -33,6 +33,7 @@ pub struct Profile {
     pub available: bool,
     pub hour_rate: Option<Uint128>,
     pub account_id: Addr,
+    pub skill: String,
 }
 
 #[cw_serde]

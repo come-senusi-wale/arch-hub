@@ -35,9 +35,10 @@ async function createProfile() {
     
     const msg = {
         create_profile: {
-            name: "waledayofort",
+            name: "waledayofif",
             hour_rate: "100000",
-            cost: cost
+            cost: cost,
+            skill: "programmer"
         }
     };
 
@@ -124,7 +125,7 @@ async function updateMetadata() {
     
     const msg = {
         update_metadata: {
-            name: "waledayotwe.arch",
+            name: "waledayofif.arch",
             update: {
                 description: "IPFS link for user profile for waledayoele",
                 // Other properties stay the same

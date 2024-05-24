@@ -14,7 +14,8 @@ pub enum ExecuteMsg {
     CreateProfile {
         name: String,
         hour_rate: Option<Uint128>,
-        cost: u128
+        cost: u128,
+        skill: String,
     },
     UpdateHourlyRate {
         name: String,
@@ -98,6 +99,7 @@ pub struct ProfileResponse {
     pub arch_id: String,
     pub available: bool,
     pub hour_rate: Uint128,
+    pub skill: String,
     pub account_id: Addr,
     pub meta_data: Metadata
 }
@@ -107,6 +109,7 @@ pub struct ProfileByNameResponse {
     pub arch_id: String,
     pub available: bool,
     pub hour_rate: Uint128,
+    pub skill: String,
     pub account_id: Addr,
     pub meta_data: Metadata,
     pub jobs: Vec<u64> 
